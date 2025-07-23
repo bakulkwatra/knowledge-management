@@ -19,7 +19,7 @@ export const setAuthToken = (token) => {
   }
 };
 
-const baseURL="/${baseURL}";
+const baseURL="/km";
 
 const tagService = {
   getAllTags: (resource_type) =>
