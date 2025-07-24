@@ -3,8 +3,9 @@ import { tagService } from "../services/blogService";
 import { useEffect, useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { XMarkIcon, PlusIcon } from "@heroicons/react/24/outline";
-import PillInput from "../components/PillInput";
+import MultiSelectPillInput from "../components/atoms/headless/MultiSelectPillInput";
 import FormFooter from "../components/atoms/forms/FormFooter"
+import { categoryGroupService } from "../services/kmService";
 
 
 const AddBlogForm = ({ onClose }) => {
@@ -18,7 +19,8 @@ const AddBlogForm = ({ onClose }) => {
   } = useForm({
     defaultValues: {
       title: "",
-      topics: [],
+      // topics: [],
+      categoryGroups: [],
       tags: [],
       content: [],
     },
@@ -29,9 +31,11 @@ const AddBlogForm = ({ onClose }) => {
     name: "content",
   });
 
-  const [availableTopics, setAvailableTopics] = useState([]);
+  // const [availableTopics, setAvailableTopics] = useState([]);
+  const [availableCategoryGroups, setAvailableCategoryGroups] = useState([]);
   const [availableTags, setAvailableTags] = useState([]);
-  const [loadingTopics, setLoadingTopics] = useState(true);
+  // const [loadingTopics, setLoadingTopics] = useState(true);
+  const [loadingCategoryGroups, setLoadingCategoryGroups] = useState(true);
   const [loadingTags, setLoadingTags] = useState(true);
   const [submitError, setSubmitError] = useState(null);
 
@@ -42,18 +46,32 @@ const AddBlogForm = ({ onClose }) => {
     };
   }, []);
 
+  // useEffect(() => {
+  //   const fetchTopics = async () => {
+  //     try {
+  //       const response = await topicService.getAllTopics();
+  //       setAvailableTopics(response.data.map((topic) => topic.topic));
+  //     } catch (error) {
+  //       console.error("Error fetching topics:", error);
+  //     } finally {
+  //       setLoadingTopics(false);
+  //     }
+  //   };
+  //   fetchTopics();
+  // }, []);
+
   useEffect(() => {
-    const fetchTopics = async () => {
+    const fetchCategoryGroups = async () => {
       try {
-        const response = await topicService.getAllTopics();
-        setAvailableTopics(response.data.map((topic) => topic.topic));
+        const response = await categoryGroupService.getAllCategoryGroups();
+        setAvailableCategoryGroups(response.data.map((group) => group.name));
       } catch (error) {
-        console.error("Error fetching topics:", error);
+        console.error("Error fetching category groups:", error);
       } finally {
-        setLoadingTopics(false);
+        setLoadingCategoryGroups(false);
       }
     };
-    fetchTopics();
+    fetchCategoryGroups();
   }, []);
 
   useEffect(() => {
@@ -70,48 +88,53 @@ const AddBlogForm = ({ onClose }) => {
     fetchTags();
   }, []);
 
-  const selectedTopics = watch("topics");
+  // const selectedTopics = watch("topics");
   const selectedTags = watch("tags");
+  const selectedCategoryGroups = watch("categoryGroups");
 
-  const handleAddTopic = (topic) => {
-    if (!selectedTopics.includes(topic)) {
-      setValue("topics", [...selectedTopics, topic]);
-    }
-  };
+  // const handleAddTopic = (topic) => {
+  //   if (!selectedTopics.includes(topic)) {
+  //     setValue("topics", [...selectedTopics, topic]);
+  //   }
+  // };
 
-  const handleRemoveTopic = (topicToRemove) => {
-    setValue(
-      "topics",
-      selectedTopics.filter((topic) => topic !== topicToRemove)
-    );
-  };
+  // const handleRemoveTopic = (topicToRemove) => {
+  //   setValue(
+  //     "topics",
+  //     selectedTopics.filter((topic) => topic !== topicToRemove)
+  //   );
+  // };
 
-  const handleAddTag = (tag) => {
-    if (!selectedTags.includes(tag)) {
-      setValue("tags", [...selectedTags, tag]);
-    }
-  };
+  // const handleAddTag = (tag) => {
+  //   if (!selectedTags.includes(tag)) {
+  //     setValue("tags", [...selectedTags, tag]);
+  //   }
+  // };
 
-  const handleRemoveTag = (tagToRemove) => {
-    setValue(
-      "tags",
-      selectedTags.filter((tag) => tag !== tagToRemove)
-    );
-  };
+  // const handleRemoveTag = (tagToRemove) => {
+  //   setValue(
+  //     "tags",
+  //     selectedTags.filter((tag) => tag !== tagToRemove)
+  //   );
+  // };
 
   const onSubmit = async (data) => {
     setSubmitError(null);
-    if (data.topics.length === 0) {
-      alert("Please select at least one topic.");
-      return;
-    }
+    // if (data.topics.length === 0) {
+    //   alert("Please select at least one topic.");
+    //   return;
+    // }
     if (data.tags.length === 0) {
       alert("Please select at least one tag.");
       return;
     }
+    if (data.categoryGroups.length === 0) {
+      alert("Please select at least one category group.");
+      return;
+    }
 
     try {
-      const response = await fetch("/api/blogs", {
+      const response = await fetch("/api/km", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -168,7 +191,7 @@ const AddBlogForm = ({ onClose }) => {
           </div>
 
           {/* Topics */}
-          {loadingTopics ? (
+          {/* {loadingTopics ? (
             <p className="text-gray-600">Loading topics...</p>
           ) : (
             <PillInput
@@ -178,10 +201,24 @@ const AddBlogForm = ({ onClose }) => {
               onAddItem={handleAddTopic}
               onRemoveItem={handleRemoveTopic}
             />
-          )}
+          )} */}
+
+          {loadingCategoryGroups ? (
+            <p className="text-gray-600">Loading categoryGroups...</p>
+          ) : (
+            <MultiSelectPillInput
+              label="CategoryGroup (Mandatory)"
+              options={availableCategoryGroups.map((t) => ({ value: t, label: t }))}
+              selectedItems={selectedCategoryGroups.map((t) => ({ value: t, label: t }))}
+              onChange={(newItems) =>
+                setValue("categoryGroups", newItems.map((item) => item.value))
+              }
+              placeholder="Select categoryGroups"
+            />
+            )}
 
           {/* Tags */}
-          {loadingTags ? (
+          {/* {loadingTags ? (
             <p className="text-gray-600">Loading tags...</p>
           ) : (
             <PillInput
@@ -190,6 +227,20 @@ const AddBlogForm = ({ onClose }) => {
               selectedItems={selectedTags}
               onAddItem={handleAddTag}
               onRemoveItem={handleRemoveTag}
+            />
+          )} */}
+
+          {loadingTags ? (
+            <p className="text-gray-600">Loading tags...</p>
+          ) : (
+            <MultiSelectPillInput
+              label="Tags (Mandatory)"
+              options={availableTags.map((t) => ({ value: t, label: t }))}
+              selectedItems={selectedTags.map((t) => ({ value: t, label: t }))}
+              onChange={(newItems) =>
+                setValue("tags", newItems.map((item) => item.value))
+              }
+              placeholder="Select tags"
             />
           )}
 
