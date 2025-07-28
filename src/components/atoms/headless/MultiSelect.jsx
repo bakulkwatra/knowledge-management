@@ -1,5 +1,5 @@
 import { Fragment, useState } from "react";
-import { Listbox, Transition } from "@headlessui/react";
+import { Listbox, ListboxButton, ListboxOption, ListboxOptions, Transition } from "@headlessui/react";
 import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/20/solid";
 
 const MultiSelect = ({ label, options, selectedItems, onChange }) => {
@@ -24,19 +24,19 @@ const MultiSelect = ({ label, options, selectedItems, onChange }) => {
       <Listbox value={selectedItems} onChange={toggleItem} multiple>
         {({ open }) => (
           <div className="relative">
-            <Listbox.Button
+            <ListboxButton
               onClick={() => setIsOpen(!isOpen)}
               className="relative w-full cursor-default rounded-lg bg-white border border-gray-300 py-2 pl-3 pr-10 text-left shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <span className="block truncate">
-                {selectedItems.length > 0
+                {selectedItems?.length > 0
                   ? selectedItems.map((i) => i.label).join(", ")
                   : "Select options"}
               </span>
               <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                 <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
               </span>
-            </Listbox.Button>
+            </ListboxButton>
 
             <Transition
               as={Fragment}
@@ -45,9 +45,9 @@ const MultiSelect = ({ label, options, selectedItems, onChange }) => {
               leaveFrom="opacity-100"
               leaveTo="opacity-0"
             >
-              <Listbox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                {options.map((option) => (
-                  <Listbox.Option
+              <ListboxOptions className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                {options?.map((option) => (
+                  <ListboxOption
                     key={option.value}
                     className={({ active }) =>
                       `relative cursor-default select-none py-2 pl-10 pr-4 ${
@@ -72,9 +72,9 @@ const MultiSelect = ({ label, options, selectedItems, onChange }) => {
                         )}
                       </>
                     )}
-                  </Listbox.Option>
+                  </ListboxOption>
                 ))}
-              </Listbox.Options>
+              </ListboxOptions>
             </Transition>
           </div>
         )}

@@ -73,7 +73,7 @@ const PostContentPanel = () => {
           { label: "Articles", icon: <FaFileAlt /> },
           { label: "Blogs", icon: <FaPenNib /> },
           { label: "Documents", icon: <FaFileUpload /> },
-          { label: "Q & A", icon: <FaQuestionCircle /> },
+          { label: "Ask Expert", icon: <FaQuestionCircle /> },
           { label: "Discussions", icon: <FaFileAlt /> },
           { label: "Tags", icon: <FaFileAlt /> },
         ].map((item, index) => (

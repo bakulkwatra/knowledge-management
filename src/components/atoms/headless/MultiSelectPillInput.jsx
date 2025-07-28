@@ -40,7 +40,7 @@ const MultiSelectPillInput = ({ label, options = [], selectedItems, onChange }) 
         <div className="relative">
           <div className="relative w-full cursor-default overflow-hidden rounded-lg bg-white border border-gray-300 py-2 pl-3 pr-10 text-left shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
             <div className="flex flex-wrap gap-1">
-              {selectedItems.map((item) => (
+              {selectedItems?.map((item) => (
                 <span
                   key={item}
                   className="flex items-center bg-blue-500 text-white text-xs px-2 py-1 rounded-full"
