@@ -148,6 +148,8 @@
 // };
 
 // export default Comments;
+
+
 import { useEffect, useState } from "react";
 import {resourceService} from "../services/kmService";
 import CommentItem from "./CommentItem";
@@ -165,7 +167,7 @@ const Comments = ({ resourceType, resourceId, userId, isUserResourceOwner }) => 
     setLoading(true);
     try {
       const response = await resourceService.getComments(resourceType, resourceId);
-      const sorted = sortComments(response.data);
+      const sorted = sortComments(response.data.data);
       setComments(sorted);
     } catch (err) {
       console.error("Error loading comments:", err);

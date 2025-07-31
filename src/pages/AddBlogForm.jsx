@@ -3,7 +3,7 @@ import { tagService } from "../services/blogService";
 import { useEffect, useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { XMarkIcon, PlusIcon } from "@heroicons/react/24/outline";
-import MultiSelectPillInput from "../components/atoms/headless/MultiSelectPillInput";
+import MultiSelectPillInput from "../components/atoms/headless/MultiSelectPillInput.jsx";
 import FormFooter from "../components/atoms/forms/FormFooter"
 import { categoryGroupService } from "../services/kmService";
 
