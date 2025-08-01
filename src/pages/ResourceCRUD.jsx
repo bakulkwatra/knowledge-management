@@ -1,198 +1,186 @@
+
 import { useEffect, useState } from 'react';
 import MultiSelect from '../components/atoms/headless/MultiSelect';
 import MultiSelectPillInput from '../components/atoms/headless/MultiSelectPillInput';
-import { tagService, categoryGroupService,categoryService } from '../services/kmService'; // Your backend API service
+import Select from '../components/atoms/headless/Select';
+import Comments from '../components/Comments';
+import { tagService, categoryGroupService, categoryService, resourceService } from '../services/kmService';
+import { useParams, useNavigate } from 'react-router-dom';
 
 function ResourceCRUD() {
-  const [resourceType, setResourceType] = useState('blog');
+  const { resourceType: resourceTypeParam, resourceId: resourceIdParam } = useParams();
+  const navigate = useNavigate();
+
+  const isEditMode = !!resourceIdParam;
+  const [resourceId, setResourceId] = useState(resourceIdParam || null);
+  const [resourceType, setResourceType] = useState(resourceTypeParam || 'blog');
+  const [resourceTitle, setResourceTitle] = useState('');
+  const [summary, setSummary] = useState('');
 
   const [tagOptions, setTagOptions] = useState([]);
   const [selectedTags, setSelectedTags] = useState([]);
 
   const [categoryGroupOptions, setCategoryGroupOptions] = useState([]);
-  const [selectedCategoryGroups, setSelectedCategoryGroups] = useState([]);
+  const [selectedCategoryGroup, setSelectedCategoryGroup] = useState(null);
 
   const [categoryOptions, setCategoryOptions] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
-  
-
-  console.log('Selected tags:', selectedTags);
-  console.log('Selected CategoryGroups:', selectedCategoryGroups);
-  console.log('Selected Categories:', selectedCategories);
-
-//   const categoryGroupOptions = [
-//     { label: 'Tech', value: 'tech' },
-//     { label: 'HR', value: 'hr' },
-//   ];
-
-//   const categoryOptions = [
-//     { label: 'React', value: 'react' },
-//     { label: 'Node.js', value: 'node' },
-//   ];
 
   const showChapters = resourceType !== 'blog';
 
-  // Fetch tags for selected resourceType
-//   useEffect(() => {
-//     const fetchTags = async () => {
-//       try {
-//         const response = await tagService.getAllTags(resourceType);
-//         console.log('Fetched tags:', response.data);
+  // Fetch existing resource in edit mode
+  useEffect(() => {
+    if (isEditMode) {
+      const fetchResource = async () => {
+        try {
+          const res = await resourceService.get(resourceTypeParam, resourceIdParam);
+          const data = res?.data?.data;
+          console.log('Fetched resource:', data);
+          setResourceTitle(data.resourceTitle || '');
+          setSummary(data.summary || '');
+          setResourceId(data.id);
 
-//         let res= response?.data?.data?.map((i,index)=>{
-//             return {
-//                 id: i.id,
-//                 tag_name: i.tagName
-//             }
-//         })
+          // Metadata mapping
+          const tags = data.metadata?.Tags || [];
+          const categories = data.metadata?.Category || [];
+          const groupLabel = data.metadata?.CategoryGroup || null;
 
-//         setTagsOptions(res || []);
-//       } catch (error) {
-//         console.error('Failed to fetch tags:', error);
-//         setTagsOptions([]);
-//       }
-//     };
-
-//     fetchTags();
-//   }, [resourceType]);
-
-useEffect(() => {
-  const fetchTags = async () => {
-    try {
-      const response = await tagService.getAllTags(resourceType);
-      console.log('Fetched tags:', response.data);
-
-      let res = response?.data?.data?.map((i) => ({
-        id: i.id,
-        tag_name: i.tagName
-      })) || [];
-
-      setTagOptions(res);
-      setSelectedTags([]); // RESET tags on resource type change
-    } catch (error) {
-      console.error('Failed to fetch tags:', error);
-      setTagOptions([]);
-      setSelectedTags([]); // Also reset on error
+          setSelectedTags(tags);
+          setSelectedCategories(categories);
+          setSelectedCategoryGroup(groupLabel);
+        } catch (error) {
+          console.error('Failed to fetch resource:', error);
+          alert('Error loading resource data.');
+        }
+      };
+      fetchResource();
     }
-  };
+  }, [isEditMode, resourceTypeParam, resourceIdParam]);
 
-  fetchTags();
-}, [resourceType]);
+  // Fetch tag options
+  useEffect(() => {
+    const fetchTags = async () => {
+      try {
+        const response = await tagService.getAllTags(resourceType);
+        const res = response?.data?.data?.map(i => ({
+          id: i.id,
+          tag_name: i.tagName
+        })) || [];
+        setTagOptions(res);
+        if (!isEditMode) setSelectedTags([]); // Clear for create
+      } catch (error) {
+        console.error('Failed to fetch tags:', error);
+        setTagOptions([]);
+        if (!isEditMode) setSelectedTags([]);
+      }
+    };
+    fetchTags();
+  }, [resourceType, isEditMode]);
 
-// useEffect(() => {
-//   const fetchCategoryGroups = async () => {
-//     try {
-//       const response = await categoryGroupService.getAllCategoryGroups(resourceType);
-//       console.log('Fetched Cat_Groups:', response.data);
+  // Fetch category groups
+  useEffect(() => {
+    const fetchCategoryGroups = async () => {
+      try {
+        const response = await categoryGroupService.getAllCategoryGroups(resourceType);
+        const res = response?.data?.data?.map(i => ({
+          label: i.groupName,
+          value: i.id
+        })) || [];
+        setCategoryGroupOptions(res);
+        if (!isEditMode) setSelectedCategoryGroup(null);
+      } catch (error) {
+        console.error('Failed to fetch groups:', error);
+        setCategoryGroupOptions([]);
+        if (!isEditMode) setSelectedCategoryGroup(null);
+      }
+    };
+    fetchCategoryGroups();
+  }, [resourceType, isEditMode]);
 
-//       let res = response?.data?.data?.map((i) => ({
-//         id: i.id,
-//         group_name: i.groupName
-//       })) || [];
+  // Fetch categories for selected group
+  useEffect(() => {
+    const fetchCategories = async () => {
+      if (!selectedCategoryGroup) {
+        setCategoryOptions([]);
+        setSelectedCategories([]);
+        return;
+      }
+      try {
+        const response = await categoryService.getAllCategories(resourceType, selectedCategoryGroup.value);
+        const res = response?.data?.data?.map(i => ({
+          label: i.category,
+          value: i.id
+        })) || [];
+        setCategoryOptions(res);
+        if (!isEditMode) setSelectedCategories([]);
+      } catch (error) {
+        console.error('Failed to fetch Categories:', error);
+        setCategoryOptions([]);
+        if (!isEditMode) setSelectedCategories([]);
+      }
+    };
+    fetchCategories();
+  }, [resourceType, selectedCategoryGroup, isEditMode]);
 
-//       setCategoryGroupOptions(res);
-//       setSelectedCategoryGroups([]); // RESET Cat_groups on resource type change
-//     } catch (error) {
-//       console.error('Failed to fetch groups:', error);
-//       setCategoryGroupOptions([]);
-//       setSelectedCategoryGroups([]); // Also reset on error
-//     }
-//   };
-
-//   fetchCategoryGroups();
-// }, [resourceType]);
-
-useEffect(() => {
-  const fetchCategoryGroups = async () => {
-    try {
-      const response = await categoryGroupService.getAllCategoryGroups(resourceType);
-      console.log('Fetched Cat_Groups:', response.data);
-
-      let res = response?.data?.data?.map((i) => ({
-        label: i.groupName,
-        value: i.id,
-        // raw: i, // Optional for reference
-      })) || [];
-
-      setCategoryGroupOptions(res);
-      setSelectedCategoryGroups([]); // Reset on type change
-    } catch (error) {
-      console.error('Failed to fetch groups:', error);
-      setCategoryGroupOptions([]);
-      setSelectedCategoryGroups([]);
+  // Save or Update Resource
+  const handleSaveResource = async () => {
+    if (!resourceTitle.trim() || !summary.trim()) {
+      alert("Title and Summary are required.");
+      return;
     }
-  };
-
-  fetchCategoryGroups();
-}, [resourceType]);
-
-
-// useEffect(() => {
-//   const fetchCategories = async () => {
-//     try {
-//       const response = await categoryService.getAllCategories(resourceType, selectedCategoryGroups.map(cg => cg.id).join(','));
-//       console.log('Fetched Categories:', response.data);
-
-//       let res = response?.data?.data?.map((i) => ({
-//         id: i.id,
-//         category: i.category
-//       })) || [];
-
-//       setCategoryOptions(res);
-//       setSelectedCategories([]); // RESET Cat_groups on resource type change
-//     } catch (error) {
-//       console.error('Failed to fetch Categories:', error);
-//       setCategoryOptions([]);
-//       setSelectedCategories([]); // Also reset on error
-//     }
-//   };
-
-//   fetchCategories();
-// }, [resourceType]);
-
-useEffect(() => {
-  const fetchCategories = async () => {
-    if (selectedCategoryGroups.length === 0) {
-      setCategoryOptions([]);
-      setSelectedCategories([]);
+    if (selectedTags.length === 0) {
+      alert("Please select at least one tag.");
+      return;
+    }
+    if (selectedCategories.length === 0) {
+      alert("Please select at least one category.");
       return;
     }
 
+    const metadata = {
+      Tags: selectedTags||[],
+      CategoryGroup: selectedCategoryGroup || null,
+      Category: selectedCategories|| [],
+    };
+
+    const payload = {
+      resourceTitle,
+      summary,
+      resourceType,
+      metadata,
+      owners: [123], // mock owner
+      processMetadata: {},
+      createdBy: 1,
+      updatedBy: 1
+    };
+
     try {
-      const groupIdsArray = selectedCategoryGroups.map(cg => cg.value);  // NOTE: using `id` not `value`
-      const response = await categoryService.getAllCategories(resourceType, groupIdsArray);
-      console.log('Fetched Categories:', response.data);
-
-      const res = response?.data?.data?.map((i) => ({
-        label: i.category,
-        value: i.value,
-        // raw: i,
-      })) || [];
-
-      setCategoryOptions(res);
-      setSelectedCategories([]); // Reset selection on group change
+      if (isEditMode) {
+        await resourceService.update(resourceType, resourceId, payload);
+        alert(`Resource updated (ID ${resourceId})`);
+      } else {
+        const generatedId = Math.floor(Math.random() * 10000);
+        await resourceService.create(resourceType, { ...payload, id: generatedId });
+        setResourceId(generatedId);
+        navigate(`/km/${resourceType}/${generatedId}/edit`);
+        alert(`Resource created (ID ${generatedId})`);
+      }
     } catch (error) {
-      console.error('Failed to fetch Categories:', error);
-      setCategoryOptions([]);
-      setSelectedCategories([]); // Also reset on error
+      console.error('Error saving resource:', error);
+      alert('Failed to save resource.');
     }
   };
 
-  fetchCategories();
-}, [resourceType, selectedCategoryGroups]);
-
-
   return (
     <div className="flex flex-col p-4 space-y-4">
-      {/* Top Controls */}
       <div className="flex space-x-4">
-        {/* Resource Type Selector */}
         <div className="w-1/4">
           <label className="block text-sm font-medium text-gray-700 mb-1">Resource Type</label>
           <select
             value={resourceType}
             onChange={(e) => setResourceType(e.target.value)}
             className="border p-2 rounded w-full"
+            disabled={isEditMode} // lock after creation
           >
             <option value="blog">Blog</option>
             <option value="article">Article</option>
@@ -200,17 +188,20 @@ useEffect(() => {
           </select>
         </div>
 
-        {/* Category Group */}
         <div className="w-1/4">
-          <MultiSelect
+          <Select
+            id="categoryGroup"
             label="Category Group"
+            value={selectedCategoryGroup?.value || ''}
+            onChange={(val) => {
+              const selected = categoryGroupOptions.find(opt => opt.value === val);
+              setSelectedCategoryGroup(selected || null);
+            }}
             options={categoryGroupOptions}
-            selectedItems={selectedCategoryGroups}
-            onChange={setSelectedCategoryGroups}
+            placeholder="Select a group"
           />
         </div>
 
-        {/* Category */}
         <div className="w-1/4">
           <MultiSelect
             label="Category"
@@ -221,21 +212,22 @@ useEffect(() => {
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="flex space-x-4">
-        {/* Left Panel */}
         <div className="w-1/4 space-y-4">
           {showChapters && (
             <div>
               <h3 className="font-semibold mb-2">Chapters</h3>
-              <ul className="space-y-2">
-                <li className="p-2 border rounded cursor-pointer hover:bg-gray-100">Chapter 1</li>
-                <li className="p-2 border rounded cursor-pointer hover:bg-gray-100">Chapter 2</li>
-              </ul>
+              {resourceId ? (
+                <ul className="space-y-2">
+                  <li className="p-2 border rounded cursor-pointer hover:bg-gray-100">Chapter 1</li>
+                  <li className="p-2 border rounded cursor-pointer hover:bg-gray-100">Chapter 2</li>
+                </ul>
+              ) : (
+                <p className="text-sm text-gray-500">Chapters will be available after saving the resource.</p>
+              )}
             </div>
           )}
 
-          {/* Tags */}
           <div>
             <h3 className="font-semibold mb-2">Tags</h3>
             <MultiSelectPillInput
@@ -247,19 +239,47 @@ useEffect(() => {
           </div>
         </div>
 
-        {/* Right Panel */}
         <div className="w-3/4 space-y-4">
-          <input type="text" placeholder="Title" className="border p-2 w-full rounded" />
+          <input
+            type="text"
+            placeholder="Title"
+            value={resourceTitle}
+            onChange={(e) => setResourceTitle(e.target.value)}
+            className="border p-2 w-full rounded"
+          />
 
-          <button className="bg-blue-500 text-white px-4 py-2 rounded">+ Add Section</button>
+          <textarea
+            placeholder="Summary"
+            value={summary}
+            onChange={(e) => setSummary(e.target.value)}
+            className="border p-2 w-full rounded h-24"
+          />
 
-          <div className="border p-4 rounded bg-gray-50">
-            <p>Section blocks like Files, Images, Links will appear here...</p>
-          </div>
-
-          <textarea placeholder="Summary" className="border p-2 w-full rounded h-24" />
+          <button
+            className={`px-4 py-2 rounded text-white ${
+              resourceTitle && summary && selectedTags.length > 0 && selectedCategories.length > 0
+                ? 'bg-green-500'
+                : 'bg-gray-400 cursor-not-allowed'
+            }`}
+            disabled={!resourceTitle || !summary || selectedTags.length === 0 || selectedCategories.length === 0}
+            onClick={handleSaveResource}
+          >
+            {isEditMode ? "Update Resource" : "Save Resource"}
+          </button>
         </div>
       </div>
+
+      {isEditMode && (
+        <div className="mt-8 border-t pt-4">
+          <h2 className="text-lg font-semibold mb-2">Comments</h2>
+          <Comments
+            resourceType={resourceType}
+            resourceId={resourceId}
+            userId={"abcd"}
+            isUserResourceOwner={true}
+          />
+        </div>
+      )}
     </div>
   );
 }

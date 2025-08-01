@@ -52,13 +52,13 @@ const categoryGroupService = {
 };
 //categories
 const categoryService = {
-  // getAllCategories: (resource_type,category_group_id) => apiClient.get(`/${resource_type}/admin/${category_group_id}/categories`),
- getAllCategories: (resource_type, groupIdsArray) =>
-    apiClient.get(`/${resource_type}/admin/categories`, {
-      params: {
-        group_ids: groupIdsArray.join(','), // Send comma-separated group IDs
-      },
-    }),
+  getAllCategories: (resource_type,category_group_id) => apiClient.get(`/${resource_type}/admin/${category_group_id}/categories`),
+//  getAllCategories: (resource_type, groupIdsArray) =>
+//     apiClient.get(`/${resource_type}/admin/categories`, {
+//       params: {
+//         group_ids: groupIdsArray.join(','), // Send comma-separated group IDs
+//       },
+//     }),
   create: (resource_type, category_group_id, data) => apiClient.post(`/${resource_type}/admin/${category_group_id}/category`, data),
   update: (id,resource_type, category_group_id, data) => apiClient.put(`/${resource_type}/admin/${category_group_id}/category/${id}`, data),
   
