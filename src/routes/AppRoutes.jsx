@@ -36,15 +36,15 @@
 
 
 import { Routes, Route, useLocation } from "react-router-dom";
-// import Blogs from "../pages/Blogs";
-// import BlogDetails from "../pages/BlogDetails";
-// import Header from "../components/atoms/Header";
-// import Footer from "../components/atoms/Footer";
-// import HomePage from "../pages/HomePage";
-// import { useEffect } from "react";
-// import { Layout } from "lucide-react";
-// import PostContentPanel from "../components/PostContentPanel";
-// import Documents from "../pages/Documents";
+import Blogs from "../pages/Blogs";
+import BlogDetails from "../pages/BlogDetails";
+import Header from "../components/atoms/Header";
+import Footer from "../components/atoms/Footer";
+import HomePage from "../pages/HomePage";
+import { useEffect } from "react";
+import { Layout } from "lucide-react";
+import PostContentPanel from "../components/PostContentPanel";
+import Documents from "../pages/Documents";
 import ResourceCRUD from "../pages/ResourceCRUD";
 import { Navigate } from "react-router-dom";
 // const ScrollToTop = () => {
@@ -64,7 +64,7 @@ const AppRoutes = () => {
       <Header /> */}
 
       <Routes>
-        <Route path="/" element={<Navigate to="/km/blog/create" replace />} />
+         <Route path="/" element={<Navigate to="/km/blog/create" replace />} /> 
         <Route path="/km/:resourceType/create" element={<ResourceCRUD />} />
         <Route path="/km/:resourceType/:resourceId/edit" element={<ResourceCRUD />} />
         {/* <Route path="/" element={<Layout />} />
