@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: KMS
+  datasource:
+    url: jdbc:postgresql://localhost:5432/KMS
+    username: postgres
+    password: Bakul@123#
+  jpa:
+    show-sql: true
+    generate-ddl: true
+    hibernate:
+      ddl-auto: update
+
+
+server:
+  port: 9098
+
+file:
+  upload-dir: D:\Spring\KMFileUpload
