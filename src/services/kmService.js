@@ -89,7 +89,7 @@ const resourceService = {
 
   // Resource-Tag
   getMasterTags: (resource_type) => apiClient.get(`/${resource_type}/tags`),
-  assignTags: (resource_type, resource_id, tags) => apiClient.post(`/${resource_type}/${resource_id}/tags`, { tags }),
+  assignTags: (resource_type, resource_id) => apiClient.post(`/${resource_type}/${resource_id}/tags`, payload),
   getAssignedTags: (resource_type, resource_id) => apiClient.get(`/${resource_type}/${resource_id}/tags`),
 
   // Resource-Category

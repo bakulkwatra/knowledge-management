@@ -1150,11 +1150,12 @@ import Select from '../components/atoms/headless/Select';
 import MultiSelect from '../components/atoms/headless/MultiSelect';
 import ChapterCard from '../components/ChapterCard';
 import SectionCard from '../components/SectionCard';
+import DropDownButton from '../components/atoms/headless/DropDownButton';
 import TagValueInputDropdown from '../components/TagValueInputDropdown';
 import Comments from '../components/Comments';
 import RatingStars from '../components/atoms/media&display/RatingStars';
 import axios from 'axios';
-import { categoryGroupService, categoryService, resourceService } from '../services/kmService';
+import { categoryGroupService, categoryService, resourceService, chapterService } from '../services/kmService';
 
 function ResourceCRUD() {
   const { resourceType: resourceTypeParam, resourceId: resourceIdParam } = useParams();
@@ -1164,18 +1165,44 @@ function ResourceCRUD() {
   const [resourceId, setResourceId] = useState(resourceIdParam || null);
   const [resourceType, setResourceType] = useState(resourceTypeParam || 'blog');
   const [resourceTitle, setResourceTitle] = useState('');
+  const[processStatus, setProcessStatus] = useState('DRAFT'); // New state for process status
+  const [status, setStatus] = useState('ACTIVE'); // New state for status
 
   const [categoryGroupOptions, setCategoryGroupOptions] = useState([]);
   const [selectedCategoryGroup, setSelectedCategoryGroup] = useState(null);
   const [categoryOptions, setCategoryOptions] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
-  const [selectedTags, setSelectedTags] = useState([]);
+  const [selectedTagsWithValues, setSelectedTagsWithValues] = useState([]);
 
   const [showBuilder, setShowBuilder] = useState(false);
 
-  //chnage
-  const [selectedChapterId, setSelectedChapterId] = useState(null);
+  const [newSections, setNewSections] = useState([]); // holds multiple unsaved section forms
   const [sections, setSections] = useState([]);
+  const [selectedChapterId, setSelectedChapterId] = useState(null);
+
+  useEffect(() => {
+  if (!resourceType || !resourceId) return;
+
+  const fetchAssignedTags = async () => {
+    try {
+      const res = await axios.get(
+        `http://localhost:9098/km/${resourceType}/${resourceId}/tags`
+      );
+      const assigned =
+        res?.data?.data?.map((t) => ({
+          tag_id: t.tagId || t.tag_id,
+          tag_name: t.tag?.tagName || t.tag?.tag_name,
+          tag_values: t.tagValues || t.tag_values || [],
+        })) || [];
+      setSelectedTagsWithValues(assigned);
+    } catch (err) {
+      console.error("Failed to fetch assigned tags", err);
+    }
+  };
+
+  fetchAssignedTags();
+}, [resourceType, resourceId]);
+
 
 const fetchSectionsForChapter = async (chapterId) => {
   if (!chapterId || !resourceType) return;
@@ -1187,6 +1214,44 @@ const fetchSectionsForChapter = async (chapterId) => {
     setSections([]);
   }
 };
+
+useEffect(() => {
+    if (!resourceId || resourceType !== "blog") return;
+
+    const fetchBlogChapter = async () => {
+      try {
+        const res = await chapterService.getAll(resourceType, resourceId);
+        const chapters = res?.data?.data || [];
+        if (chapters.length > 0) {
+          const blogChapter = chapters[0]; // only 1 auto-created
+          setSelectedChapterId(blogChapter.id);
+          fetchSectionsForChapter(blogChapter.id);
+        }
+      } catch (err) {
+        console.error("Failed to fetch blog chapter", err);
+      }
+    };
+
+    fetchBlogChapter();
+  }, [resourceId, resourceType]);
+
+const handleAddSectionForm = () => {
+  setNewSections(prev => [
+    ...prev,
+    { id: null, sectionTitle: "", tempId: Math.random() }
+  ]);
+};
+
+const handleNewSectionSaved = (savedSection, tempId) => {
+  setNewSections(prev => prev.filter(sec => sec.tempId !== tempId));
+  fetchSectionsForChapter(selectedChapterId);
+};
+
+const handleNewSectionDeleted = (tempId) => {
+  setNewSections(prev => prev.filter(sec => sec.tempId !== tempId));
+};
+
+
 
   
   // Likes and Rating
@@ -1267,6 +1332,8 @@ const fetchSectionsForChapter = async (chapterId) => {
       resourceType,
       metadata,
       owners: [123],
+      processStatus,
+      status,
       createdBy: 1,
       updatedBy: 1
     };
@@ -1406,35 +1473,74 @@ const fetchSectionsForChapter = async (chapterId) => {
             className="border p-2 w-full rounded text-lg font-semibold"
           />
 
-           {/* Section for creating a new section */}
+          
+
     {selectedChapterId && (
-      <div className="mt-4">
-        <h3 className="font-semibold mb-2">Create New Section</h3>
-        <SectionCard
-          resourceType={resourceType}
-          chapterId={selectedChapterId}
-          onSaved={() => fetchSectionsForChapter(selectedChapterId)}
-          onDeleted={() => fetchSectionsForChapter(selectedChapterId)}
-        />
+      <div className="flex items-center justify-between mt-4">
+        <h3 className="font-semibold mb-2">Sections</h3>
+        <button
+          onClick={handleAddSectionForm}
+          className="text-white bg-blue-500 hover:bg-blue-600 rounded-full w-8 h-8 flex items-center justify-center text-xl font-bold"
+          title="Add new section"
+        >
+          +
+        </button>
       </div>
     )}
 
-    {/* Display existing sections */}
-    {selectedChapterId && sections.length > 0 && (
-        <div className="mt-4 space-y-4">
-            <h3 className="font-semibold mb-2">Existing Sections</h3>
-            {sections.map(section => (
-                <SectionCard
-                    key={section?.id}
-                    sectionData={section}
-                    resourceType={resourceType}
-                    chapterId={selectedChapterId}
-                    onSaved={() => fetchSectionsForChapter(selectedChapterId)}
-                    onDeleted={() => fetchSectionsForChapter(selectedChapterId)}
-                />
-            ))}
+    {/* Render unsaved section forms */}
+    {selectedChapterId &&
+      newSections.map(sec => (
+        <div key={sec.tempId} className="mt-2">
+          <SectionCard
+            sectionData={sec}
+            resourceType={resourceType}
+            chapterId={selectedChapterId}
+            onSaved={(data) => handleNewSectionSaved(data, sec.tempId)}
+            onDeleted={() => handleNewSectionDeleted(sec.tempId)}
+          />
         </div>
+      ))}
+
+    {/* Render saved sections */}
+    {selectedChapterId && sections.length > 0 && (
+      <div className="mt-4 space-y-4">
+        <h3 className="font-semibold mb-2">Existing Sections</h3>
+        {sections.map(section => (
+          <SectionCard
+            key={section?.id}
+            sectionData={section}
+            resourceType={resourceType}
+            chapterId={selectedChapterId}
+            onSaved={() => fetchSectionsForChapter(selectedChapterId)}
+            onDeleted={() => fetchSectionsForChapter(selectedChapterId)}
+          />
+        ))}
+      </div>
     )}
+
+    {/* ---- Update button (AFTER resource is created) ---- */}
+<div className="mt-6 border-t pt-4 flex justify-end">
+  <button
+    onClick={handleSave} // reuses your existing create/update logic
+    disabled={
+      !resourceTitle?.trim() ||
+      selectedCategories.length === 0 ||
+      !processStatus ||
+      !status
+    }
+    className={`px-4 py-2 rounded text-white
+      ${
+        !resourceTitle?.trim() || selectedCategories.length === 0 || !processStatus || !status
+          ? "bg-gray-400 cursor-not-allowed"
+          : "bg-blue-600 hover:bg-blue-700"
+      }`}
+  >
+    Update Resource
+  </button>
+</div>
+
+
         </div>
 
         {/* Right Sticky Panel */}
@@ -1458,8 +1564,9 @@ const fetchSectionsForChapter = async (chapterId) => {
           />
           <TagValueInputDropdown
             resourceType={resourceTypeParam}
-            selectedTagsWithValues={selectedTags}
-            onChange={setSelectedTags}
+            resourceId={resourceId} 
+            selectedTagsWithValues={selectedTagsWithValues}
+            onChange={setSelectedTagsWithValues}
           />
           <button
             onClick={handleLikeToggle}
@@ -1474,14 +1581,42 @@ const fetchSectionsForChapter = async (chapterId) => {
           </div>
           <div className="mt-2">
             <RatingStars
-  value={rating}
-  onChange={setRating}
-  resourceType={resourceType} // 
-  resourceId={resourceId} // 
-  userId={userId} //
-/>
+              value={rating}
+              onChange={setRating}
+              resourceType={resourceType} // 
+              resourceId={resourceId} // 
+              userId={userId} //
+            />
           </div>
+
+         <div className="flex gap-1 p-0">
+      {/* Process Status */}
+      <DropDownButton
+        
+        label="Process Status"
+        value={processStatus}
+        onChange={setProcessStatus}
+        options={[
+          { label: "DRAFT", value: "DRAFT" },
+          { label: "POST", value: "POST" },
+        ]}
+      />
+
+      {/* Status */}
+      <DropDownButton
+      
+        label="Status"
+        value={status}
+        onChange={setStatus}
+        options={[
+          { label: "ACTIVE", value: "ACTIVE" },
+          { label: "INACTIVE", value: "INACTIVE" },
+        ]}
+      />
+    </div>
         </div>
+
+        
       </div>
 
       {/* Comments Section */}

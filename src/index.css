@@ -1,1 +1,17 @@
 @import 'tailwindcss';
+
+/* TipTap content styling */
+
+@layer components {
+  .prose h1 { @apply text-3xl font-bold my-2; }
+  .prose h2 { @apply text-2xl font-semibold my-2; }
+  .prose h3 { @apply text-xl font-medium my-2; }
+
+  .prose ul { @apply list-disc list-inside ml-4; }
+  .prose ol { @apply list-decimal list-inside ml-4; }
+
+  .prose table { @apply border-collapse border border-gray-300 w-full my-3; }
+  .prose th { @apply border border-gray-300 px-2 py-1 bg-gray-100 font-semibold; }
+  .prose td { @apply border border-gray-300 px-2 py-1; }
+}
+

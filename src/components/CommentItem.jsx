@@ -199,11 +199,11 @@ const CommentItem = ({
               Edit
             </button>
           )}
-          {isOwner && (
+          {/* {isOwner && (
             <button onClick={() => onDelete(comment.id)} className="hover:underline text-red-600">
               Delete
             </button>
-          )}
+          )} */}
           {comment.children.length > 0 && (
             <button
               onClick={() => toggleCollapse(comment.id)}
