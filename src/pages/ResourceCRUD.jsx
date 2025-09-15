@@ -1155,6 +1155,7 @@ import TagValueInputDropdown from '../components/TagValueInputDropdown';
 import Comments from '../components/Comments';
 import RatingStars from '../components/atoms/media&display/RatingStars';
 import axios from 'axios';
+import CardBannerUploader from '../components/CardBannerUploader';
 import { categoryGroupService, categoryService, resourceService, chapterService } from '../services/kmService';
 
 function ResourceCRUD() {
@@ -1179,6 +1180,8 @@ function ResourceCRUD() {
   const [newSections, setNewSections] = useState([]); // holds multiple unsaved section forms
   const [sections, setSections] = useState([]);
   const [selectedChapterId, setSelectedChapterId] = useState(null);
+
+  const[blogSummary, setBlogSummary] = useState('');
 
   useEffect(() => {
   if (!resourceType || !resourceId) return;
@@ -1334,6 +1337,7 @@ const handleNewSectionDeleted = (tempId) => {
       owners: [123],
       processStatus,
       status,
+      summary:blogSummary||'',
       createdBy: 1,
       updatedBy: 1
     };
@@ -1472,7 +1476,12 @@ const handleNewSectionDeleted = (tempId) => {
             onChange={(e) => setResourceTitle(e.target.value)}
             className="border p-2 w-full rounded text-lg font-semibold"
           />
-
+ 
+         <CardBannerUploader
+  resourceId={resourceId}
+  resourceType={resourceType}
+  type="banner"
+/>
           
 
     {selectedChapterId && (
@@ -1517,7 +1526,24 @@ const handleNewSectionDeleted = (tempId) => {
           />
         ))}
       </div>
+
+      
     )}
+
+    {resourceType === 'blog' && (
+  <div className="flex flex-col">
+    <label htmlFor="summary" className="text-gray-700 font-medium">Blog Summary</label>
+    <textarea
+      
+      id="summary"
+      className="border border-gray-300 p-2 rounded-md focus:ring-2 focus:ring-blue-500"
+      rows="4" // Allows multiple lines of text
+      value={blogSummary}
+      onChange={(e) => setBlogSummary(e.target.value)}
+      placeholder="Write a brief summary of your blog post here..."
+    />
+  </div>
+)}
 
     {/* ---- Update button (AFTER resource is created) ---- */}
 <div className="mt-6 border-t pt-4 flex justify-end">
@@ -1552,6 +1578,7 @@ const handleNewSectionDeleted = (tempId) => {
             onChange={(val) => {
               const selected = categoryGroupOptions.find(opt => opt.value === val);
               setSelectedCategoryGroup(selected || null);
+              setSelectedCategories([]);
             }}
             options={categoryGroupOptions}
             placeholder="Select group"
@@ -1564,10 +1591,15 @@ const handleNewSectionDeleted = (tempId) => {
           />
           <TagValueInputDropdown
             resourceType={resourceTypeParam}
-            resourceId={resourceId} 
-            selectedTagsWithValues={selectedTagsWithValues}
-            onChange={setSelectedTagsWithValues}
+            resourceId={resourceIdParam} 
+  
           />
+
+          <CardBannerUploader
+  resourceId={resourceId}
+  resourceType={resourceType}
+  type="card"
+/>
           <button
             onClick={handleLikeToggle}
             className={`w-full px-4 py-2 text-white text-sm rounded transition duration-200 ${

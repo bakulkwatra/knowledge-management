@@ -261,6 +261,146 @@
 
 // export default Comments;
 
+// import { useEffect, useState } from "react";
+// import { resourceService } from "../services/kmService";
+// import CommentItem from "./CommentItem";
+
+// const Comments = ({ resourceType, resourceId, userId, isUserResourceOwner }) => {
+//   const [comments, setComments] = useState([]);
+//   const [collapsedComments, setCollapsedComments] = useState({});
+//   const [loading, setLoading] = useState(true);
+//   const [newRootComment, setNewRootComment] = useState("");
+
+//   useEffect(() => {
+//     fetchComments();
+//   }, [resourceId]);
+
+//   const fetchComments = async () => {
+//     setLoading(true);
+//     try {
+//       const response = await resourceService.getComments(resourceType, resourceId);
+//       const sorted = sortComments(response.data.data);
+//       setComments(sorted);
+//     } catch (err) {
+//       console.error("Error loading comments:", err);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const sortComments = (commentsList) => {
+//     const map = {};
+//     const roots = [];
+
+//     commentsList.forEach(comment => {
+//       comment.children = [];
+//       map[comment.id] = comment;
+//     });
+
+//     commentsList.forEach(comment => {
+//       if (comment.parent_id) {
+//         if (map[comment.parent_id]) {
+//           map[comment.parent_id].children.push(comment);
+//         }
+//       } else {
+//         roots.push(comment);
+//       }
+//     });
+
+//     return roots;
+//   };
+
+//   const handleAdd = async (newComment, parentId = null) => {
+//     try {
+//       await resourceService.addComment(resourceType, resourceId, {
+//         id: Math.floor(Math.random() * 10000), // Generate a temporary IDx
+//         ...newComment,
+//         parentId: parentId,
+//         userId: userId,
+//       });
+//       fetchComments();
+//     } catch (err) {
+//       console.error("Add failed", err);
+//     }
+//   };
+
+//   const handleDelete = async (commentId) => {
+//     try {
+//       await resourceService.deleteComment(commentId, userId);
+//       fetchComments();
+//     } catch (err) {
+//       console.error("Delete failed", err);
+//     }
+//   };
+
+//   const handleEdit = async (commentId, updatedText) => {
+//     try {
+//       await resourceService.editComment(commentId, { comment: updatedText });
+//       fetchComments();
+//     } catch (err) {
+//       console.error("Edit failed", err);
+//     }
+//   };
+
+//   const toggleCollapse = (commentId) => {
+//     setCollapsedComments(prev => ({
+//       ...prev,
+//       [commentId]: !prev[commentId],
+//     }));
+//   };
+
+//   const handleAddRootComment = () => {
+//     if (newRootComment.trim()) {
+//       handleAdd({ comment: newRootComment });
+//       setNewRootComment("");
+//     }
+//   };
+
+//   return (
+//     <div className="space-y-4">
+//       {/* Root Comment Input */}
+//       <div className="mb-4">
+//         <textarea
+//           className="w-full p-2 border rounded"
+//           rows={3}
+//           value={newRootComment}
+//           onChange={(e) => setNewRootComment(e.target.value)}
+//           placeholder="Write a comment..."
+//         />
+//         <button
+//           onClick={handleAddRootComment}
+//           className="mt-2 bg-green-500 text-white px-3 py-1 rounded"
+//         >
+//           Add Comment
+//         </button>
+//       </div>
+
+//       {/* Comment List */}
+//       {loading ? (
+//         <p>Loading comments...</p>
+//       ) : comments.length === 0 ? (
+//         <p className="text-gray-500">No comments yet.</p>
+//       ) : (
+//         comments.map(comment => (
+//           <CommentItem
+//             key={comment.id}
+//             comment={comment}
+//             collapsedComments={collapsedComments}
+//             toggleCollapse={toggleCollapse}
+//             onAddReply={handleAdd}
+//             onDelete={handleDelete}
+//             onEdit={handleEdit}
+//             userId={userId}
+//             isUserResourceOwner={isUserResourceOwner}
+//           />
+//         ))
+//       )}
+//     </div>
+//   );
+// };
+
+// export default Comments;
+
 import { useEffect, useState } from "react";
 import { resourceService } from "../services/kmService";
 import CommentItem from "./CommentItem";
@@ -279,7 +419,11 @@ const Comments = ({ resourceType, resourceId, userId, isUserResourceOwner }) => 
     setLoading(true);
     try {
       const response = await resourceService.getComments(resourceType, resourceId);
-      const sorted = sortComments(response.data.data);
+
+      // Adjust to actual API shape
+      const data = response.data.data || response.data || [];
+
+      const sorted = sortComments(data);
       setComments(sorted);
     } catch (err) {
       console.error("Error loading comments:", err);
@@ -288,19 +432,22 @@ const Comments = ({ resourceType, resourceId, userId, isUserResourceOwner }) => 
     }
   };
 
+  // Build nested tree from flat comments
   const sortComments = (commentsList) => {
     const map = {};
     const roots = [];
 
-    commentsList.forEach(comment => {
+    commentsList.forEach((comment) => {
       comment.children = [];
       map[comment.id] = comment;
     });
 
-    commentsList.forEach(comment => {
-      if (comment.parent_id) {
-        if (map[comment.parent_id]) {
-          map[comment.parent_id].children.push(comment);
+    commentsList.forEach((comment) => {
+      if (comment.parentId) { // ✅ use parentId (camelCase)
+        if (map[comment.parentId]) {
+          map[comment.parentId].children.push(comment);
+        } else {
+          roots.push(comment); // orphaned
         }
       } else {
         roots.push(comment);
@@ -313,10 +460,9 @@ const Comments = ({ resourceType, resourceId, userId, isUserResourceOwner }) => 
   const handleAdd = async (newComment, parentId = null) => {
     try {
       await resourceService.addComment(resourceType, resourceId, {
-        id: Math.floor(Math.random() * 10000), // Generate a temporary IDx
         ...newComment,
-        parentId: parentId,
-        userId: userId,
+        parentId,
+        userId,
       });
       fetchComments();
     } catch (err) {
@@ -343,7 +489,7 @@ const Comments = ({ resourceType, resourceId, userId, isUserResourceOwner }) => 
   };
 
   const toggleCollapse = (commentId) => {
-    setCollapsedComments(prev => ({
+    setCollapsedComments((prev) => ({
       ...prev,
       [commentId]: !prev[commentId],
     }));
@@ -381,7 +527,7 @@ const Comments = ({ resourceType, resourceId, userId, isUserResourceOwner }) => 
       ) : comments.length === 0 ? (
         <p className="text-gray-500">No comments yet.</p>
       ) : (
-        comments.map(comment => (
+        comments.map((comment) => (
           <CommentItem
             key={comment.id}
             comment={comment}
@@ -400,4 +546,3 @@ const Comments = ({ resourceType, resourceId, userId, isUserResourceOwner }) => 
 };
 
 export default Comments;
-

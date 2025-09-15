@@ -75,6 +75,43 @@ const resourceService = {
   delete: (resource_type, resource_id) => apiClient.delete(`/${resource_type}/${resource_id}`),
   list: (resource_type) => apiClient.get(`/${resource_type}/list`),
   
+  //image Upload
+  uploadCard: async (resourceType, resourceId, cardImg, bannerImg) => {
+    const formData = new FormData();
+    if (cardImg) formData.append("cardImg", cardImg);
+    if (bannerImg) formData.append("bannerImg", bannerImg);
+
+    const res = await apiClient.post(
+      `/${resourceType}/cards/${resourceId}/upload`,
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" }, // override
+      }
+    );
+    return res.data;
+  },
+
+  updateCard: async (resourceType, cardId, cardImg, bannerImg) => {
+    const formData = new FormData();
+    if (cardImg) formData.append("cardImg", cardImg);
+    if (bannerImg) formData.append("bannerImg", bannerImg);
+
+    const res = await apiClient.put(
+      `/${resourceType}/cards/${cardId}/update`,
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" }, // override
+      }
+    );
+    return res.data;
+  },
+
+  getCards: async (resourceType, resourceId) => {
+    const res = await apiClient.get(`/${resourceType}/cards/${resourceId}`);
+    return res.data;
+  },
+
+  
   // Search 
   search: (resource_type, filters) => apiClient.get(`/${resource_type}/search`, { params: filters }),
   
@@ -87,10 +124,11 @@ const resourceService = {
   updateStatus: (resource_type, resource_id, data) => apiClient.put(`/${resource_type}/${resource_id}/status`, data),
   updateProcessStatus: (resource_type, resource_id, data) => apiClient.put(`/${resource_type}/${resource_id}/process-status`, data),
 
-  // Resource-Tag
+  // Resource-Tag 9nd*uZR@Eb6dTy*
   getMasterTags: (resource_type) => apiClient.get(`/${resource_type}/tags`),
-  assignTags: (resource_type, resource_id) => apiClient.post(`/${resource_type}/${resource_id}/tags`, payload),
+  assignTags: (resource_type, resource_id, payload) => apiClient.post(`/${resource_type}/${resource_id}/tags`, payload),
   getAssignedTags: (resource_type, resource_id) => apiClient.get(`/${resource_type}/${resource_id}/tags`),
+  deleteTag: (resource_type, resource_id, tag_id) => apiClient.delete(`/${resource_type}/removeTagValue/${resource_id}/${tag_id}`),
 
   // Resource-Category
   getMasterCategories: (resource_type) => apiClient.get(`/${resource_type}/categories`),

@@ -138,6 +138,118 @@
 
 // export default CommentItem;
 
+// import React, { useState } from "react";
+
+// const CommentItem = ({
+//   comment,
+//   collapsedComments,
+//   toggleCollapse,
+//   onAddReply,
+//   onDelete,
+//   onEdit,
+//   userId,
+//   isUserResourceOwner,
+// }) => {
+//   const [showReplyBox, setShowReplyBox] = useState(false);
+//   const [replyText, setReplyText] = useState("");
+//   const [isEditing, setIsEditing] = useState(false);
+//   const [editText, setEditText] = useState(comment.comment);
+
+//   const isOwner = userId === comment.user_id || isUserResourceOwner;
+
+//   const handleReplySubmit = () => {
+//     if (replyText.trim()) {
+//       onAddReply({ comment: replyText }, comment.id);
+//       setReplyText("");
+//       setShowReplyBox(false);
+//     }
+//   };
+
+//   const handleEditSubmit = () => {
+//     if (editText.trim()) {
+//       onEdit(comment.id, editText);
+//       setIsEditing(false);
+//     }
+//   };
+
+//   return (
+//     <div className="ml-4 border-l pl-4 space-y-2">
+//       <div className="bg-gray-100 p-2 rounded">
+//         {isEditing ? (
+//           <div className="space-y-2">
+//             <textarea
+//               className="w-full p-2 border rounded"
+//               value={editText}
+//               onChange={(e) => setEditText(e.target.value)}
+//             />
+//             <div className="flex gap-2">
+//               <button onClick={handleEditSubmit} className="text-blue-500">Save</button>
+//               <button onClick={() => setIsEditing(false)} className="text-gray-500">Cancel</button>
+//             </div>
+//           </div>
+//         ) : (
+//           <p>{comment.comment}</p>
+//         )}
+//         <div className="text-sm text-gray-600 flex gap-4 mt-2">
+//           <button onClick={() => setShowReplyBox(!showReplyBox)} className="hover:underline">
+//             Reply
+//           </button>
+//           {userId === comment.user_id && (
+//             <button onClick={() => setIsEditing(true)} className="hover:underline text-yellow-600">
+//               Edit
+//             </button>
+//           )}
+//           {/* {isOwner && (
+//             <button onClick={() => onDelete(comment.id)} className="hover:underline text-red-600">
+//               Delete
+//             </button>
+//           )} */}
+//           {comment.children.length > 0 && (
+//             <button
+//               onClick={() => toggleCollapse(comment.id)}
+//               className="hover:underline text-blue-600"
+//             >
+//               {collapsedComments[comment.id] ? "Expand" : "Collapse"} ({comment.children.length})
+//             </button>
+//           )}
+//         </div>
+//       </div>
+
+//       {showReplyBox && (
+//         <div className="ml-4">
+//           <textarea
+//             className="w-full p-2 border rounded"
+//             rows={2}
+//             value={replyText}
+//             onChange={(e) => setReplyText(e.target.value)}
+//             placeholder="Write your reply..."
+//           />
+//           <div className="flex gap-2 mt-1">
+//             <button onClick={handleReplySubmit} className="text-green-600">Reply</button>
+//             <button onClick={() => setShowReplyBox(false)} className="text-gray-500">Cancel</button>
+//           </div>
+//         </div>
+//       )}
+
+//       {!collapsedComments[comment.id] &&
+//         comment.children.map((child) => (
+//           <CommentItem
+//             key={child.id}
+//             comment={child}
+//             collapsedComments={collapsedComments}
+//             toggleCollapse={toggleCollapse}
+//             onAddReply={onAddReply}
+//             onDelete={onDelete}
+//             onEdit={onEdit}
+//             userId={userId}
+//             isUserResourceOwner={isUserResourceOwner}
+//           />
+//         ))}
+//     </div>
+//   );
+// };
+
+// export default CommentItem;
 import React, { useState } from "react";
 
 const CommentItem = ({
@@ -155,7 +267,7 @@ const CommentItem = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(comment.comment);
 
-  const isOwner = userId === comment.user_id || isUserResourceOwner;
+  const isOwner = userId === comment.userId || isUserResourceOwner;
 
   const handleReplySubmit = () => {
     if (replyText.trim()) {
@@ -183,33 +295,52 @@ const CommentItem = ({
               onChange={(e) => setEditText(e.target.value)}
             />
             <div className="flex gap-2">
-              <button onClick={handleEditSubmit} className="text-blue-500">Save</button>
-              <button onClick={() => setIsEditing(false)} className="text-gray-500">Cancel</button>
+              <button onClick={handleEditSubmit} className="text-blue-500">
+                Save
+              </button>
+              <button
+                onClick={() => setIsEditing(false)}
+                className="text-gray-500"
+              >
+                Cancel
+              </button>
             </div>
           </div>
         ) : (
           <p>{comment.comment}</p>
         )}
         <div className="text-sm text-gray-600 flex gap-4 mt-2">
-          <button onClick={() => setShowReplyBox(!showReplyBox)} className="hover:underline">
+          <button
+            onClick={() => setShowReplyBox(!showReplyBox)}
+            className="hover:underline"
+          >
             Reply
           </button>
-          {userId === comment.user_id && (
-            <button onClick={() => setIsEditing(true)} className="hover:underline text-yellow-600">
+          {userId === comment.userId && (
+            <button
+              onClick={() => setIsEditing(true)}
+              className="hover:underline text-yellow-600"
+            >
               Edit
             </button>
           )}
-          {/* {isOwner && (
-            <button onClick={() => onDelete(comment.id)} className="hover:underline text-red-600">
+          {isOwner && (
+            <button
+              onClick={() => onDelete(comment.id)}
+              className="hover:underline text-red-600"
+            >
               Delete
             </button>
-          )} */}
+          )}
           {comment.children.length > 0 && (
             <button
               onClick={() => toggleCollapse(comment.id)}
               className="hover:underline text-blue-600"
             >
-              {collapsedComments[comment.id] ? "Expand" : "Collapse"} ({comment.children.length})
+              {collapsedComments[comment.id]
+                ? "Expand"
+                : "Collapse"}{" "}
+              ({comment.children.length})
             </button>
           )}
         </div>
@@ -225,8 +356,15 @@ const CommentItem = ({
             placeholder="Write your reply..."
           />
           <div className="flex gap-2 mt-1">
-            <button onClick={handleReplySubmit} className="text-green-600">Reply</button>
-            <button onClick={() => setShowReplyBox(false)} className="text-gray-500">Cancel</button>
+            <button onClick={handleReplySubmit} className="text-green-600">
+              Reply
+            </button>
+            <button
+              onClick={() => setShowReplyBox(false)}
+              className="text-gray-500"
+            >
+              Cancel
+            </button>
           </div>
         </div>
       )}

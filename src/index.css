@@ -3,15 +3,52 @@
 /* TipTap content styling */
 
 @layer components {
-  .prose h1 { @apply text-3xl font-bold my-2; }
-  .prose h2 { @apply text-2xl font-semibold my-2; }
-  .prose h3 { @apply text-xl font-medium my-2; }
+  /* Headings */
+  .prose h1 { @apply text-3xl md:text-4xl font-extrabold my-4; }
+  .prose h2 { @apply text-2xl md:text-3xl font-bold my-4; }
+  .prose h3 { @apply text-xl md:text-2xl font-semibold my-4; }
 
-  .prose ul { @apply list-disc list-inside ml-4; }
-  .prose ol { @apply list-decimal list-inside ml-4; }
+  /* Lists */
+  .prose ul, .prose ol {
+    @apply my-4 pl-8;
+  }
+  .prose ul {
+    @apply list-disc;
+  }
+  .prose ol {
+    @apply list-decimal;
+  }
+  .prose li {
+    @apply mb-2;
+  }
 
-  .prose table { @apply border-collapse border border-gray-300 w-full my-3; }
-  .prose th { @apply border border-gray-300 px-2 py-1 bg-gray-100 font-semibold; }
-  .prose td { @apply border border-gray-300 px-2 py-1; }
+  /* Tables */
+  .prose table {
+    @apply w-full my-6 border-collapse shadow-sm rounded-lg overflow-hidden;
+    /* Use fixed table layout for predictable column widths */
+    table-layout: fixed;
+  }
+
+  .prose th, .prose td {
+    @apply border border-gray-200 px-4 py-3 text-left;
+    /* Allow cell content to wrap if it's too long */
+    word-wrap: break-word;
+    /* Optionally, set a min-width to prevent columns from becoming too narrow */
+    min-width: 80px; 
+  }
+
+  .prose th {
+    @apply bg-gray-100 font-semibold text-gray-700;
+  }
+  .prose tr:nth-child(even) {
+    @apply bg-gray-50;
+  }
+
+  /* General Text */
+  .prose p {
+    @apply my-4 leading-relaxed;
+  }
+
+  
 }
 

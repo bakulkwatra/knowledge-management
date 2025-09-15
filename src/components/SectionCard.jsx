@@ -1631,7 +1631,7 @@ function SectionCard({
       setSectionType(sectionData.sectionType || 'text');
       setSectionContent(sectionData.sectionContent ?? null);
 
-      if (sectionData.sectionType === 'file' && sectionData.sectionContent) {
+       if ((sectionData.sectionType === 'file' || sectionData.sectionType === 'image') && sectionData.sectionContent) {
         try {
           // Parse the JSON string from the API into a JS array
           const parsedContent = JSON.parse(sectionData.sectionContent);
@@ -1717,13 +1717,13 @@ function SectionCard({
       });
 
       // 3. Normalize sectionContent to a JSON string
-      let finalContent = sectionContent;
-      if (sectionType === "file") {
-        finalContent = JSON.stringify(finalFileArray.filter(f => f.id)); // Serialize to JSON string
-      } else {
-        // For other types, use the direct content
-        finalContent = sectionContent;
-      }
+      let finalContent;
+ if (sectionType === "file" || sectionType === "image") {
+  //  finalContent = JSON.stringify(finalFileArray.filter(f => f.id));
+      finalContent= finalFileArray.filter(f => f.id).map(f => f.name || f.fileName).join(", ");
+ } else {
+   finalContent = sectionContent;
+ }
 
       // 4. Update the section in the database
       const finalPayload = {
@@ -1820,15 +1820,13 @@ function SectionCard({
         placeholder="Write here..."
       /> */}
       <EditorSection
-        type={sectionType}
-        // ✅ Pass the tempFileArray directly to the FileSection component
-        value={sectionType === "file" ? tempFileArray : sectionContent}
-        // ✅ Pass the setter for the tempFileArray
-        onChange={sectionType === "file" ? setTempFileArray : setSectionContent}
-        resourceType={resourceType}
-        sectionId={sectionId}
-        placeholder="Write here..."
-      />
+   type={sectionType}
+   value={['file', 'image'].includes(sectionType) ? tempFileArray : sectionContent}
+   onChange={['file', 'image'].includes(sectionType) ? setTempFileArray : setSectionContent}
+   resourceType={resourceType}
+   sectionId={sectionId}
+   placeholder="Write here..."
+ />
 
       <div className="flex space-x-4">
         <button

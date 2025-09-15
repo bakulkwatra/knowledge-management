@@ -82,7 +82,8 @@ export default function EditorSection({
         <ImageSection
           value={value}
           onChange={onChange}
-          placeholder={placeholder}
+          resourceType={resourceType}
+          sectionId={sectionId}
         />
       );
     case "file":
